@@ -88,4 +88,4 @@ for logiciel in PORTNUMBER:
     print os.popen('iptables -A INPUT -p udp --dport ' + str(PORTNUMBER[logiciel]) + " -j DROP").read()
 
 # Permet de conserver la mise à jour de iptables aprés un redémarrage (coupure de courant ou autre...)
-print os.popen('service iptables-persistent save')
+print os.popen('service iptables-persistent save').read()
