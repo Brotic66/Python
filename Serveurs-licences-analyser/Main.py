@@ -1,4 +1,9 @@
+#!/usr/bin/env python3.4
 __author__ = 'Brice VICO'
+
+"""
+Contient une classe mais aussi une routine de création d'une instance de la classe Main.
+"""
 
 from Connexion import Connexion
 from collections import defaultdict
@@ -11,6 +16,12 @@ class Main:
 
     def __init__(self):
         """
+        Effectue des actions élémentaires de préparation :
+
+            - Connexion aux serveurs de licences
+            - connexion à la BDD
+            - lancement des threads
+
         :return:
         """
 
@@ -19,16 +30,16 @@ class Main:
 
         print("========== Connexions aux serveurs... ==========")
 
-        self.ssh.append(self.creerConnexion("licences.cnfm.fr"))
-        self.ssh.append(self.creerConnexion("licence2.cnfm.fr"))
+        self.ssh.append(self.creerConnexion("licences.xxx.fr"))
+        self.ssh.append(self.creerConnexion("licence2.xxx.fr"))
 
-        print("========== Connexions établies ==========")
+        print("========== Connexions etablies ==========")
 
         print("========== Connexion à la BDD... ==========")
 
         self.bdd = Bdd()
 
-        print("========== Connexion établie ==========")
+        print("========== Connexion etablie ==========")
 
         i = 0
         lock = RLock()
@@ -40,6 +51,7 @@ class Main:
 
     def creerConnexion(self, serveur):
         """
+        Crée une connexion au serveur en SSH via un objet Remote (voir Remote.py)
 
         :param serveur:
         :return Remote:

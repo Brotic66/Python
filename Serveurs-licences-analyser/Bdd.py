@@ -6,6 +6,9 @@ from netaddr import IPNetwork
 import re
 
 class Bdd:
+    """
+    Cette classe permet à un EcouteurThread, de récupérer / modifier des éléments en base de données.
+    """
 
     def __init__(self):
         """
@@ -13,18 +16,24 @@ class Bdd:
         """
         self.db = pymysql.connect(host='localhost',
                              user='root',
-                             passwd='password',
-                             db='Crcc',
+                             passwd='xxxxxxxx',
+                             db='xxxxxxxx',
                              charset='utf8',
                              cursorclass=pymysql.cursors.DictCursor)
         self.listeIp = defaultdict()
+        self.listeLogiciels = list()
+
+        with self.db.cursor() as cursor:
+            sql = "UPDATE Logiciel SET nbrConnexionEnCours = 0"
+            cursor.execute(sql)
+            self.db.commit()
 
     def updateListeIp(self):
         """
         :return:
 
         Récupère en base de donnée la liste des Installations valide et le nom du logiciel associé afin d'en extraire
-        les adresses Ips.
+        les adresses Ips récupèrent également le nom de tous les logiciels.
         """
         with self.db.cursor() as cursor:
             sql = "SELECT i.id, i.ips, l.nom FROM Installation i, Logiciel l WHERE i.valide = 1" \
@@ -33,6 +42,14 @@ class Bdd:
             result = cursor.fetchall()
 
         self.listeIp = self.resultatToListe(result)
+
+        with self.db.cursor() as cursor:
+            sql = "SELECT nom FROM Logiciel"
+            cursor.execute(sql)
+            resultLogiciel = cursor.fetchall()
+
+        for logiciel in resultLogiciel:
+            self.listeLogiciels.append(logiciel["nom"])
 
     def resultatToListe(self, data):
         """
@@ -96,19 +113,38 @@ class Bdd:
 
         return False
 
-if __name__ == "__main__":
-    bdd = Bdd()
-    bdd.updateListeIp()
+    def addNbrConnexionEnCours(self, logiciel):
+        """
+        :param logiciel:
+        :param ip:
+        :return:
 
-    for logiciel in bdd.listeIp.keys():
-        print(logiciel)
+        Incrémente le nombre de connexion pour une installation dans la base de données de l'application web
+        """
+        if logiciel in self.listeLogiciels:
+            with self.db.cursor() as cursor:
+                sql = "UPDATE Logiciel SET nbrConnexionEnCours=nbrConnexionEnCours + 1 WHERE nom=%s"
+                cursor.execute(sql, (logiciel,))
+                self.db.commit()
 
-        for installation in bdd.listeIp[logiciel]:
-            for id in installation.keys():
-                print("===== " + str(id) + " =====")
+            return True
 
-                for ipBase in installation[id]:
-                    print("=== " + ipBase + " ===")
+        return False
 
-                    for ip in IPNetwork(ipBase):
-                        print(ip)
+    def removeNbrConnexionEnCours(self, logiciel):
+        """
+        :param logiciel:
+        :param ip:
+        :return:
+
+        Incrémente le nombre de connexion pour une installation dans la base de données de l'application web
+        """
+        if logiciel in self.listeLogiciels:
+            with self.db.cursor() as cursor:
+                sql = "UPDATE Logiciel SET nbrConnexionEnCours=Logiciel.nbrConnexionEnCours - 1 WHERE nom=%s"
+                cursor.execute(sql, (logiciel,))
+                self.db.commit()
+
+            return True
+
+        return False
